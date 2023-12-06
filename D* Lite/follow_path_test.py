@@ -35,13 +35,13 @@ def relDirection(pos1, pos2):
 # positions) stored in the parameter path.
 def followPath(startPosition, startOrientation, path):
     curPos = startPosition
-    curDir = startOrientation
+    currDir = startOrientation
 
     for i in range(len(path)):
         nextPos = path[i]
         relDir = relDirection(curPos, nextPos)
-        print("At pos " + str(curPos) + " facing direction " + str(curDir)
-              + " (" + directions[curDir] + ")")
+        print("At pos " + str(curPos) + " facing direction " + str(currDir)
+              + " (" + directions[currDir] + ")")
         print("Next pos is " + str(nextPos)
               + ", whose direction relative to the current pos is "
               + str(relDir) + " (" + directions[relDir] + ")")
@@ -68,7 +68,7 @@ def followPath(startPosition, startOrientation, path):
 
         # Update the current position and orientation
         curPos = nextPos
-        curDir = relDir
+        currDir = relDir
 
 
 # Test the code
