@@ -13,7 +13,8 @@ left_sonar = UltrasonicSensor(INPUT_4)
 right_sonar = UltrasonicSensor(INPUT_1)
 sound = Sound()
 
-
+global currPos
+global currDir
 
 
 # Names of cardinal directions corresponding to the integers 0, 1, 2, and 3
@@ -48,7 +49,19 @@ def relDirection(pos1, pos2):
 
 
 
-def scan_for_change(currPos):
+def scan_for_change(currPos, currDir):
+    sound.speak('Current position is row {} column {} '.format(currPos[0], currPos[1]))
+    #Ensuring always facing south before scan
+    if currDir == north:
+        spin('right', TURN_SPEED, 180)
+    elif currDir == east:
+        spin('right', TURN_SPEED, 90)
+    elif currDir == west:
+        spin('left', TURN_SPEED, 90)
+    else: #south
+        pass
+    currDir = south
+
     new_world_map = copy.deepcopy(planning_map.world_map)
     print("dcopy", new_world_map)
     left = 1 if left_sonar.distance_centimeters < 50 else 0 #obstacle if distance less than 50cm
@@ -57,21 +70,52 @@ def scan_for_change(currPos):
     sound.speak('Left {}'.format(left))
     sound.speak('Right {}'.format(right))
 
-    #Spin left to check forward(down) and backward(up)
+    ##spin left to check forward(down) and backward(up)
     spin('left', TURN_SPEED, 90)
-    back = 1 if left_sonar.distance_centimeters < 50 else 0 #obstacle if distance less than 50cm
+    # back = 1 if left_sonar.distance_centimeters < 50 else 0 #obstacle if distance less than 50cm
     forward = 1 if right_sonar.distance_centimeters < 50 else 0 #obstacle if distance less than 50cm
 
-    sound.speak('Back {}'.format(back))
+    # sound.speak('Back {}'.format(back))
     sound.speak('Forward {}'.format(forward))
 
-    #Spin back to original position
+    ##spin back to original position
     spin('right', TURN_SPEED, 90)
 
-    new_world_map[currPos[0]][currPos[1]- 1] = left
-    new_world_map[currPos[0]][currPos[1]+ 1] = right
-    new_world_map[currPos[0] - 1][currPos[1]] = back
-    new_world_map[currPos[0] + 1][currPos[1]] = forward
+    # new_world_map[currPos[0]][currPos[1]- 1] = left
+    # new_world_map[currPos[0]][currPos[1]+ 1] = right
+    # # new_world_map[currPos[0] - 1][currPos[1]] = back #not checking back
+    # new_world_map[currPos[0] + 1][currPos[1]] = forward
+
+    if currPos == (0,0):
+        new_world_map[0][1] = left   
+        new_world_map[1][0] = forward    
+    elif currPos == (1,0):
+        new_world_map[1][1] = left   
+        new_world_map[2][0] = forward  
+    elif currPos == (2,0):
+        new_world_map[2][1] = left 
+    
+    elif currPos == (0,1):
+        new_world_map[0][2] = left   
+        new_world_map[1][1] = forward    
+        new_world_map[0][0] = right
+    elif currPos == (1,1):
+        new_world_map[1][2] = left   
+        new_world_map[2][1] = forward    
+        new_world_map[1][0] = right
+    elif currPos == (2,1):
+        new_world_map[2][2] = left  
+        new_world_map[2][0] = right
+
+    elif currPos == (0,2):
+        new_world_map[1][2] = forward    
+        new_world_map[0][1] = right
+    elif currPos == (1,2):
+        new_world_map[2][2] = forward    
+        new_world_map[1][1] = right
+    elif currPos == (2,2):
+        new_world_map[2][1] = right
+
 
     print('nwmap', new_world_map)
 
@@ -91,14 +135,53 @@ def scan_for_change(currPos):
                 break
 
     
-    return [change, new_world_map]
+    return [currDir, change, new_world_map]
 
-def execute_next_step(path):
+def execute_next_step(path, currPos, currDir):
     sound.speak('Executing next step')
-    pass
+    nextPos = path.pop(0)
+    relDir = relDirection(currPos, nextPos)
 
-def recompute_algorithm(working_world_map):
-    pass
+    print("At pos " + str(currPos) + " facing direction " + str(currDir)
+            + " (" + directions[currDir] + ")")
+    print("Next pos is " + str(nextPos)
+            + ", whose direction relative to the current pos is "
+            + str(relDir) + " (" + directions[relDir] + ")")
+    print()
+
+        # TO DO: IF NECESSARY, TURN TO FACE IN THE CORRECT DIRECTION
+
+    if (currDir == north and relDir == east) or (currDir == east and relDir == south) or (currDir == south and relDir == west) or (currDir == west and relDir == north):
+        sound.speak('Spinning')
+        spin('right', TURN_SPEED, 90)
+
+    elif (currDir == north and relDir == south) or (currDir == east and relDir == west) or (currDir == south and relDir == north) or (currDir == west and relDir == east):
+        sound.speak('Spinning')
+        spin('right', TURN_SPEED, 180)
+
+    elif (currDir == north and relDir == west) or (currDir == west and relDir == south) or (currDir == south and relDir == east) or (currDir == east and relDir == north):
+        sound.speak('Spinning')
+        spin('left', TURN_SPEED, 90)
+
+    else: #currDir == relDir
+        pass
+
+    
+    # TO DO: MOVE ONE CELL FORWARD INTO THE NEXT POSITION
+    sound.speak('Moving forward')
+    move_straight(DRIVE_SPEED, CELL_DISTANCE_M)
+
+    # Update the current position and orientation
+    currPos = nextPos
+    currDir = relDir
+    return [currPos, currDir]
+
+
+
+def recompute_algorithm(working_world_map, currPos):
+    wavefront_plan = wavefront_algorithm(working_world_map, currPos, goal)
+    path = path_extractor(wavefront_plan, currPos, goal)
+    return path
 
 
 # Assuming the robot starts at startPosition, facing the direction startOrientation,
@@ -116,12 +199,12 @@ def run_dstar_lite(world_map, start, goal):
 
     #Repeated Incremental Part
     while currPos != goal:
-        [change, new_world_map] = scan_for_change(currPos)
+        [currDir, change, new_world_map] = scan_for_change(currPos, currDir)
         if change == False: #No change
-            execute_next_step(path)
+            [currPos, currDir] = execute_next_step(path, currPos, currDir)
         else:
-            working_world_map = new_world_map
-            recompute_algorithm(working_world_map)
+            working_world_map = copy.deepcopy(new_world_map)
+            path = recompute_algorithm(working_world_map, currPos)
             continue
     if currPos == goal:
         sound.speak('Done')
@@ -133,6 +216,6 @@ world_map = [
     [1,1,0]
 ]
 
-start = (1,1) #(0,0)
+start = (0,0) #(0,0)
 goal = (2,2)
 run_dstar_lite(world_map, start, goal)
