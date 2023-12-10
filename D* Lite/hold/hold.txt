@@ -1,0 +1,108 @@
+This approach for replanning
+
+import heapq
+
+class DStarLite:
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+        self.start = (0, 0)
+        self.goal = (width - 1, height - 1)
+        self.h = [[float('inf')] * height for _ in range(width)]
+        self.km = 0
+        self.U = []
+
+    def heuristic(self, a, b):
+        return abs(a[0] - b[0]) + abs(a[1] - b[1])
+
+    def calculateKey(self, node):
+        return (min(self.g(node), self.rhs(node)) + self.heuristic(self.start, node) + self.km,
+                min(self.g(node), self.rhs(node)))
+
+    def rhs(self, node):
+        x, y = node
+        if node == self.goal:
+            return 0
+        if not (0 <= x < self.width and 0 <= y < self.height):
+            return float('inf')
+        return min(self.g_succ(node, succ) + self.cost(node, succ) for succ in self.neighbors(node))
+
+    def g(self, node):
+        x, y = node
+        return self.h[x][y]
+
+    def g_succ(self, node, succ):
+        return self.g(succ) + self.cost(node, succ)
+
+    def cost(self, a, b):
+        return 1  # Assuming a uniform cost for all edges
+
+    def neighbors(self, node):
+        x, y = node
+        neighbors = []
+        if 0 <= x - 1 < self.width:
+            neighbors.append((x - 1, y))
+        if 0 <= x + 1 < self.width:
+            neighbors.append((x + 1, y))
+        if 0 <= y - 1 < self.height:
+            neighbors.append((x, y - 1))
+        if 0 <= y + 1 < self.height:
+            neighbors.append((x, y + 1))
+        return neighbors
+
+    def updateVertex(self, node):
+        if node != self.start:
+            self.h[node[0]][node[1]] = self.rhs(node)
+        if node in self.U:
+            self.U.remove(node)
+        if self.g(node) != self.rhs(node):
+            heapq.heappush(self.U, self.calculateKey(node))
+
+    def computeShortestPath(self):
+        while self.U and (self.U[0] < self.calculateKey(self.start) or self.rhs(self.start) != self.g(self.start)):
+            k_old = self.U[0]
+            u = heapq.heappop(self.U)
+            if k_old < self.calculateKey(u):
+                heapq.heappush(self.U, self.calculateKey(u))
+            elif self.g(u) > self.rhs(u):
+                self.h[u[0]][u[1]] = self.rhs(u)
+                for succ in self.neighbors(u):
+                    self.updateVertex(succ)
+            else:
+                self.h[u[0]][u[1]] = float('inf')
+                for succ in self.neighbors(u) + [u]:
+                    self.updateVertex(succ)
+
+    def replan(self):
+        self.km += self.heuristic(self.start, self.goal)
+        self.updateVertex(self.goal)
+        self.computeShortestPath()
+
+    def printPath(self):
+        path = []
+        current = self.start
+        while current != self.goal:
+            path.append(current)
+            neighbors = self.neighbors(current)
+            neighbors.sort(key=lambda n: self.g_succ(current, n) + self.heuristic(n, self.goal))
+            current = neighbors[0]
+        path.append(self.goal)
+        for row in range(self.height):
+            for col in range(self.width):
+                if (col, row) == self.start:
+                    print("S", end=" ")
+                elif (col, row) == self.goal:
+                    print("G", end=" ")
+                elif (col, row) in path:
+                    print("*", end=" ")
+                elif self.h[col][row] < float('inf'):
+                    print(".", end=" ")
+                else:
+                    print("#", end=" ")
+            print(path)
+
+# Example usage:
+width, height = 5, 5
+dstar = DStarLite(width, height)
+dstar.replan()
+dstar.printPath()

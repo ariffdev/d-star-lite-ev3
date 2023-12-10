@@ -1,0 +1,16 @@
+#!/usr/bin/env python3
+from movement import *
+DRIVE_SPEED = 500
+TILE_DISTANCE_IN_METRES = 44.5 / 100
+
+DISTANCE_A_IN_METRES = 30 / 100
+DISTANCE_B_IN_METRES = 30 / 100
+
+HYPOTENUSE = math.sqrt(DISTANCE_A_IN_METRES ** 2 + DISTANCE_B_IN_METRES ** 2)
+
+move_straight(DRIVE_SPEED, DISTANCE_A_IN_METRES)
+spin('right', DRIVE_SPEED, 90)
+move_straight(DRIVE_SPEED, DISTANCE_B_IN_METRES)
+spin('right',DRIVE_SPEED, 135)
+move_straight(DRIVE_SPEED, HYPOTENUSE)
+spin('right', DRIVE_SPEED, 135)
