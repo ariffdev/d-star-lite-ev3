@@ -1,0 +1,193 @@
+#!/usr/bin/env python3
+
+from wavefront_algorithm import wavefront_algorithm
+from movement import *
+from path_extraction import path_extractor
+from ev3dev2.sound import Sound
+
+sound = Sound()
+
+
+# World Map is a 3x3 2D array storing the world map information
+world_map = [
+             [0,1,0],
+             [0,0,0],
+             [1,1,0],
+            ]
+
+# Start and goal cell definitions
+start = (0,0)
+goal = (2,2)
+
+
+# Names of cardinal directions corresponding to the integers 0, 1, 2, and 3
+directions = ['east','south','west','north']
+east, south, west , north = 0, 1, 2, 3
+
+DRIVE_SPEED = 250
+TURN_SPEED = 250
+CELL_DISTANCE_M = 45 / 100
+
+# Computes the direction of pos2 relative to pos1, if pos2 is adjacent to pos1
+# pos1 and pos2 are assumed to be tuples in the form (x,y)
+# Direction is represented as an integer between 0 (corresponding to east) and
+# 3 (corresponding to north)
+# Throws an exception if pos2 is not adjacent to pos1
+def relDirection(pos1, pos2):
+    (x1, y1) = pos1
+    (x2, y2) = pos2
+    if x2==x1 and y2==y1+1:
+        dir = 0
+    elif x2==x1+1 and y2==y1:
+        dir = 1
+    elif x2==x1 and y2==y1-1:
+        dir = 2
+    elif x2==x1-1 and y2==y1:
+        dir = 3
+    else:
+        raise ValueError(str(pos1)+" and " + str(pos2) + " are not neighbors,"\
+                         +"so cannot compute relative direction between them.")
+    return dir
+
+def scan_for_change():
+   pass
+
+
+def move_next_step(path):
+    next_pos = path.pop(0)
+    print(next_pos)
+    
+def recompute_algorithm():
+    pass
+
+# Assuming the robot starts at startPosition, facing the direction startOrientation,
+# This function enables the robot to follow the path (a list of tuples representing
+# positions) stored in the parameter path.
+def run_dstar_lite(startPosition, goalPosition, startOrientation, path):
+    #Initial steps
+
+    startOrientation = south
+    currPos = startPosition
+    currDir = startOrientation
+
+    wavefront_plan = wavefront_algorithm(world_map, start, goal)
+    path = path_extractor(wavefront_plan, start, goal)
+
+    # Repeated Incremental Part
+    while currPos != goal:
+		[change, world_map]  = scan_for_change()
+        if change == False: #No change
+        	move_next_step()
+		else:
+
+
+    for i in range(len(path)):
+        nextPos = path[i]
+        relDir = relDirection(currPos, nextPos)
+        print("At pos " + str(currPos) + " facing direction " + str(currDir)
+              + " (" + directions[currDir] + ")")
+        print("Next pos is " + str(nextPos)
+              + ", whose direction relative to the current pos is "
+              + str(relDir) + " (" + directions[relDir] + ")")
+        print()
+              
+        # TO DO: IF NECESSARY, TURN TO FACE IN THE CORRECT DIRECTION
+
+        if (currDir == north and relDir == east) or (currDir == east and relDir == south) or (currDir == south and relDir == west) or (currDir == west and relDir == north):
+            sound.speak('Spinning')
+            spin('right', TURN_SPEED, 90)
+            pass
+
+        elif (currDir == north and relDir == south) or (currDir == east and relDir == west) or (currDir == south and relDir == north) or (currDir == west and relDir == east):
+            sound.speak('Spinning')
+            spin('right', TURN_SPEED, 180)
+            pass
+
+        elif (currDir == north and relDir == west) or (currDir == west and relDir == south) or (currDir == south and relDir == east) or (currDir == east and relDir == north):
+            sound.speak('Spinning')
+            spin('left', TURN_SPEED, 90)
+            pass
+
+        else: #currDir == relDir
+            pass
+ 
+        
+        # TO DO: MOVE ONE CELL FORWARD INTO THE NEXT POSITION
+        sound.speak('Moving forward')
+        move_straight(DRIVE_SPEED, CELL_DISTANCE_M)
+        
+
+
+        # Update the current position and orientation
+        currPos = nextPos
+        currDir = relDir
+
+        #Scan for obstacle changes here. If different from world map update world grid, recompute path, and repeat 
+    sound.speak('At the goal! Woohoo')  
+
+
+
+world_map_x_len = len(world_map)
+world_map_y_len = len(world_map[0])
+
+x, y = 0, 1  # for indexing position tuples
+
+def compute_neighbour_cells(currPos): #currPos -> tuple (x,y) of current position
+
+
+  # Generating all possible neigbours in 4-point connectivity
+  neighbour_dict = {
+        'up': (currPos[x]-1, currPos[y]),
+        'down': (currPos[x]+1, currPos[y]),
+        'left': (currPos[x], currPos[y]- 1),
+        'right': (currPos[x], currPos[y] + 1)
+    }
+
+  # Removing neighbours that may be out of the world map
+  for key, value in neighbour_dict.copy().items(): #created copy of dictionary for searching to avoid size change in iteration error
+    # neighbour does not fall in the world_map
+    if ((value[x] < 0) or (value[x] >= world_map_x_len)) or ((value[y] < 0) or (value[y] >= world_map_y_len)):
+      del neighbour_dict[key]
+  neighbour_cells = list(neighbour_dict.values())
+
+  return neighbour_cells #tuple of neighbour cells
+
+
+
+def path_extractor(wavefront_plan, start, goal):
+  path = []
+  currPos = start
+
+  while goal not in path:  # determine path up till goal cell
+    neighbours = compute_neighbour_cells(currPos)
+    available_neighbours = [
+        neighbour for neighbour in neighbours if world_map[neighbour[x]][neighbour[y]] != 1]
+
+  # check the value in wavefront_plan that corresponds with the available_neighbours and find the one with the least value
+    # initializing a number (infinity) that all options are guaranteed to be lower than
+    lowest_move_option = float('inf')
+    for neighbour in available_neighbours:
+      if wavefront_plan[neighbour[x]][neighbour[y]] < lowest_move_option:
+        lowest_move_option = wavefront_plan[neighbour[x]][neighbour[y]]
+        most_available_neighbour = neighbour
+    # set the most available neighbour as current position to keep path going
+    currPos = most_available_neighbour
+    path.append(most_available_neighbour)
+    print(most_available_neighbour)  # printing to the EV3 screen
+  return path  # return the constructed path
+
+
+
+# # Test the code
+# if __name__ == "__main__":
+#     # # testStartPos = (0,0)
+#     # # testStartOrientation = 0
+#     # testPath = [(0,1),(1,1),(1,2),(2,2),(2,1),(2,0),(1,0)]
+
+#     # run_dstar_lite(testStartPos, testStartOrientation, testPath)
+    
+# Main
+""" RUN ON ROBOT """
+run_dstar_lite(start, path)
+
+

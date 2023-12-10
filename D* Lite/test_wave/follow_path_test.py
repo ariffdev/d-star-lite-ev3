@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 from movement import *
+from planning_map import goal
+
+from ev3dev2.sound import Sound
+
+sound = Sound()
+
 
 # Names of cardinal directions corresponding to the integers 0, 1, 2, and 3
 directions = ['east','south','west','north']
@@ -30,17 +36,22 @@ def relDirection(pos1, pos2):
                          +"so cannot compute relative direction between them.")
     return dir
 
+
+def move_next_step(path):
+    next_pos = path.pop(0)
+    print(next_pos)
+
 # Assuming the robot starts at startPosition, facing the direction startOrientation,
 # This function enables the robot to follow the path (a list of tuples representing
 # positions) stored in the parameter path.
 def followPath(startPosition, startOrientation, path):
-    curPos = startPosition
+    currPos = startPosition
     currDir = startOrientation
 
     for i in range(len(path)):
         nextPos = path[i]
-        relDir = relDirection(curPos, nextPos)
-        print("At pos " + str(curPos) + " facing direction " + str(currDir)
+        relDir = relDirection(currPos, nextPos)
+        print("At pos " + str(currPos) + " facing direction " + str(currDir)
               + " (" + directions[currDir] + ")")
         print("Next pos is " + str(nextPos)
               + ", whose direction relative to the current pos is "
@@ -50,36 +61,42 @@ def followPath(startPosition, startOrientation, path):
         # TO DO: IF NECESSARY, TURN TO FACE IN THE CORRECT DIRECTION
 
         if (currDir == north and relDir == east) or (currDir == east and relDir == south) or (currDir == south and relDir == west) or (currDir == west and relDir == north):
+            sound.speak('Spinning')
             spin('right', TURN_SPEED, 90)
             pass
 
         elif (currDir == north and relDir == south) or (currDir == east and relDir == west) or (currDir == south and relDir == north) or (currDir == west and relDir == east):
+            sound.speak('Spinning')
             spin('right', TURN_SPEED, 180)
             pass
 
         elif (currDir == north and relDir == west) or (currDir == west and relDir == south) or (currDir == south and relDir == east) or (currDir == east and relDir == north):
+            sound.speak('Spinning')
             spin('left', TURN_SPEED, 90)
             pass
 
         else: #currDir == relDir
             pass
-
-        #Scan for obstacle changes here, update world grid, recompute path, and repeat    
+ 
         
         # TO DO: MOVE ONE CELL FORWARD INTO THE NEXT POSITION
+        sound.speak('Moving forward')
         move_straight(DRIVE_SPEED, CELL_DISTANCE_M)
+        
 
 
         # Update the current position and orientation
-        curPos = nextPos
+        currPos = nextPos
         currDir = relDir
+
+        #Scan for obstacle changes here. If different from world map update world grid, recompute path, and repeat   
 
 
 # Test the code
 if __name__ == "__main__":
-    testStartPos = (0,0)
-    testStartOrientation = 0
+    # testStartPos = (0,0)
+    # testStartOrientation = 0
     testPath = [(0,1),(1,1),(1,2),(2,2),(2,1),(2,0),(1,0)]
 
-    followPath(testStartPos, testStartOrientation, testPath)
-        
+    # followPath(testStartPos, testStartOrientation, testPath)
+    move_next_step([(0,1),(1,1),(1,2),(2,2),(2,1),(2,0),(1,0)])

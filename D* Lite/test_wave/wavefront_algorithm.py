@@ -59,7 +59,7 @@ def wavefront_algorithm(world_map, start, goal):
   return wavefront_plan
 
 """ TEST """
-print(wavefront_algorithm(world_map, start, goal))
+# wavefront_algorithm(world_map, start, goal)
 
 
 
