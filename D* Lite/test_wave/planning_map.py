@@ -2,8 +2,8 @@
 # World Map is a 3x3 2D array storing the world map information
 world_map = [
              [0,1,0],
-             [0,1,0],
              [0,0,0],
+             [1,1,0],
             ]
 
 
