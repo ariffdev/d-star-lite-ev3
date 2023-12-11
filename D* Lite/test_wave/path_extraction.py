@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from planning_map import world_map, start, goal
+from planning_map import world_map
 from follow_path_test import followPath, north, east, south, west
 
 world_map_x_len = len(world_map)
@@ -36,7 +36,7 @@ def path_extractor(wavefront_plan, start, goal):
   while goal not in path:  # determine path up till goal cell
     neighbours = compute_neighbour_cells(currPos)
     available_neighbours = [
-        neighbour for neighbour in neighbours if world_map[neighbour[x]][neighbour[y]] != 1]
+        neighbour for neighbour in neighbours if wavefront_plan[neighbour[x]][neighbour[y]] != 1]
 
   # check the value in wavefront_plan that corresponds with the available_neighbours and find the one with the least value
     # initializing a number (infinity) that all options are guaranteed to be lower than

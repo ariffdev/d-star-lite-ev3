@@ -179,8 +179,11 @@ def execute_next_step(path, currPos, currDir):
 
 
 def recompute_algorithm(working_world_map, currPos):
-    wavefront_plan = wavefront_algorithm(working_world_map, currPos, goal)
-    path = path_extractor(wavefront_plan, currPos, goal)
+    print("Working World Map: ", working_world_map)
+    new_wavefront_plan = wavefront_algorithm(working_world_map, currPos, goal)
+    print('New Plan:', new_wavefront_plan)
+    path = path_extractor(new_wavefront_plan, currPos, goal)
+    print('New Path:', path)
     return path
 
 
@@ -204,8 +207,9 @@ def run_dstar_lite(world_map, start, goal):
             [currPos, currDir] = execute_next_step(path, currPos, currDir)
         else:
             working_world_map = copy.deepcopy(new_world_map)
+            sound.speak('Recomputing path')
             path = recompute_algorithm(working_world_map, currPos)
-            continue
+            [currPos, currDir] = execute_next_step(path, currPos, currDir)
     if currPos == goal:
         sound.speak('Done')
 
@@ -216,6 +220,6 @@ world_map = [
     [1,1,0]
 ]
 
-start = (0,0) #(0,0)
+start = (1,1) #(0,0)
 goal = (2,2)
 run_dstar_lite(world_map, start, goal)

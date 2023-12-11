@@ -6,12 +6,12 @@ x, y = 0, 1  # for indexing position tuples
 world_map_x_len = len(world_map)
 world_map_y_len = len(world_map[0])
 
-def wavefront_algorithm(world_map, start, goal):
+def wavefront_algorithm(working_world_map, start, goal):
   # Initializing queue
   queue = []
 
   #Creating wavefront_plan from world map
-  wavefront_plan = world_map.copy()
+  wavefront_plan = working_world_map.copy()
 
   #Initializing goal cell to 2
   wavefront_plan[goal[x]][goal[y]] = 2
@@ -55,6 +55,11 @@ def wavefront_algorithm(world_map, start, goal):
     for neighbour in non_processed_non_obstacle_neighbours:
         wavefront_plan[neighbour[x]][neighbour[y]] = working_cell_value() + 1
         queue.append(neighbour)
+
+    for i in range(len(wavefront_plan)):
+      for j in range(len(wavefront_plan[0])):
+        if wavefront_plan[i][j] == 1 or wavefront_plan[i][j] == 0:
+          wavefront_plan[i][j] = 20000 #a number so high no other neighbours will near, hopefully
     
   return wavefront_plan
 
