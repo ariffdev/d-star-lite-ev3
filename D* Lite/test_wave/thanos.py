@@ -213,13 +213,13 @@ def run_dstar_lite(world_map, start, goal):
     if currPos == goal:
         sound.speak('Done')
 
-
+# If you change this world_map, change the on in planning_map too
 world_map = [
-    [0,1,0],
     [0,0,0],
-    [1,1,0]
+    [1,0,1],
+    [1,0,0]
 ]
 
-start = (1,1) #(0,0)
+start = (0,2) #(0,0)
 goal = (2,2)
 run_dstar_lite(world_map, start, goal)

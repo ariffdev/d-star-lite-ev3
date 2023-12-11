@@ -1,10 +1,11 @@
 from planning_map import world_map
+from wavefront_algorithm import wavefront_algorithm
 
 working_world_map = [
-                    [1,1,0],
-                    [1,1,0],
-                    [0,0,0]
-                    ]
+    [0,1,0],
+    [0,0,0],
+    [1,1,0]
+]
 
 x, y = 0, 1  # for indexing position tuples
 world_map_x_len = len(working_world_map)
@@ -58,10 +59,11 @@ def path_extractor(working_world_map, wavefront_plan, start, goal):
     print()
   return path  # return the constructed path
 
+start = (0,0)
+goal = (2,2)
 
-wavefront_plan = [
-  [10000, 10000, 6],
-    [10000, 10000, 5], 
-    [2, 3, 4]]
-path  = path_extractor(working_world_map, wavefront_plan, (0,2), (2,0))
+new_wavefront_plan = wavefront_algorithm(working_world_map, start, goal)
+print('New Plan:', new_wavefront_plan)
+
+path  = path_extractor(working_world_map, new_wavefront_plan, start, goal)
 print('Path: ', path)

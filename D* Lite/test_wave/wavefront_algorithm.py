@@ -56,10 +56,10 @@ def wavefront_algorithm(working_world_map, start, goal):
         wavefront_plan[neighbour[x]][neighbour[y]] = working_cell_value() + 1
         queue.append(neighbour)
 
-    for i in range(len(wavefront_plan)):
-      for j in range(len(wavefront_plan[0])):
-        if wavefront_plan[i][j] == 1 or wavefront_plan[i][j] == 0:
-          wavefront_plan[i][j] = 20000 #a number so high no other neighbours will near, hopefully
+    # for i in range(len(wavefront_plan)):
+    #   for j in range(len(wavefront_plan[0])):
+    #     if wavefront_plan[i][j] == 1 or wavefront_plan[i][j] == 0:
+    #       wavefront_plan[i][j] = 20000 #a number so high no other neighbours will near, hopefully
     
   return wavefront_plan
 
