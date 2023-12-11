@@ -49,7 +49,7 @@ def relDirection(pos1, pos2):
 
 
 
-def scan_for_change(currPos, currDir):
+def scan_for_change(prev_world_map, currPos, currDir):
     sound.speak('Current position is row {} column {} '.format(currPos[0], currPos[1]))
     #Ensuring always facing south before scan
     if currDir == north:
@@ -62,7 +62,7 @@ def scan_for_change(currPos, currDir):
         pass
     currDir = south
 
-    new_world_map = copy.deepcopy(planning_map.world_map)
+    new_world_map = copy.deepcopy(prev_world_map)
     print("dcopy", new_world_map)
     left = 1 if left_sonar.distance_centimeters < 50 else 0 #obstacle if distance less than 50cm
     right = 1 if right_sonar.distance_centimeters < 50 else 0 #obstacle if distance less than 50cm
@@ -129,7 +129,7 @@ def scan_for_change(currPos, currDir):
     change = False
     for i in range(len(new_world_map)):
         for j in range(len(new_world_map[0])):
-            if new_world_map[i][j] != planning_map.world_map[i][j]:
+            if new_world_map[i][j] != prev_world_map[i][j]:
                 change =  True
                 sound.speak('Lots of change')
                 break
@@ -200,9 +200,10 @@ def run_dstar_lite(world_map, start, goal):
     wavefront_plan = wavefront_algorithm(world_map, start, goal)
     path = path_extractor(wavefront_plan, start, goal)
 
+    prev_world_map = copy.deepcopy(planning_map.world_map)
     #Repeated Incremental Part
     while currPos != goal:
-        [currDir, change, new_world_map] = scan_for_change(currPos, currDir)
+        [currDir, change, new_world_map] = scan_for_change(prev_world_map, currPos, currDir)
         if change == False: #No change
             [currPos, currDir] = execute_next_step(path, currPos, currDir)
         else:
